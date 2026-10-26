@@ -62,8 +62,8 @@ print('\n', eda_sample['isFraud'].value_counts(dropna = False), '\n')
 eda_sample_num = eda_sample.select_dtypes(include=['int64', 'float64'])
 print('\n', eda_sample_num.head(), '\n')
 
-print('\n', eda_sample_num.groupby('isFlaggedFraud')['isFraud'].value_counts(), '\n')
-print('\n', eda_sample_num.groupby('isFlaggedFraud')['isFraud'].value_counts(normalize=True), '\n')
+# print('\n', eda_sample_num.groupby('isFlaggedFraud')['isFraud'].value_counts(), '\n')
+# print('\n', eda_sample_num.groupby('isFlaggedFraud')['isFraud'].value_counts(normalize=True), '\n')
 # isFlaggedFraud is almost always the same as isFraud, so it is not a useful feature for the model, because it's basically a duplicate of the target variable
 # sns.kdeplot(data=eda_sample_num, x='amount', hue='isFraud', common_norm=False)
 # plt.title('Distribution of Transaction Amounts by Fraud Status')
@@ -72,12 +72,21 @@ print('\n', eda_sample_num.groupby('isFlaggedFraud')['isFraud'].value_counts(nor
 # plt.xlim(0, 11*10**6)
 # plt.show()
 
-plt.figure(figsize=(14, 6.5))
-sns.kdeplot(data=eda_sample_num, x='step', hue='isFraud', common_norm=False)
-plt.title('Distribution of Transaction Steps by Fraud Status')
-plt.xlabel('Transaction Step')
-plt.ylabel('Density')
-plt.xlim(0, 750)
-plt.xticks(np.arange(0, 800, 50))
-plt.grid()
-plt.show()
+# plt.figure(figsize=(14, 6.5))
+# sns.kdeplot(data=eda_sample_num, x='step', hue='isFraud', common_norm=False)
+# plt.title('Distribution of Transaction Steps by Fraud Status')
+# plt.xlabel('Transaction Step')
+# plt.ylabel('Density')
+# plt.xlim(0, 750)
+# plt.xticks(np.arange(0, 800, 50))
+# plt.grid()
+# plt.show()
+
+# eda_sample_plotting = eda_sample_num.sample(frac=0.1, random_state=123)
+# print('\n', eda_sample_plotting['isFraud'].value_counts(normalize=True), '\n')
+# print('\n', eda_sample_plotting['isFraud'].value_counts(normalize=False), '\n')
+
+
+for c in ['step','amount', 'oldbalanceOrg', 'newbalanceOrig', 'oldbalanceDest', 'newbalanceDest']:
+    sns.boxenplot(data=eda_sample, x='isFraud', y=c)
+    plt.show()
