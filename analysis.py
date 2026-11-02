@@ -89,4 +89,28 @@ print('\n', eda_sample_num.head(), '\n')
 
 for c in ['step','amount', 'oldbalanceOrg', 'newbalanceOrig', 'oldbalanceDest', 'newbalanceDest']:
     sns.boxenplot(data=eda_sample, x='isFraud', y=c)
+    plt.title(f'Distribution of {c} by Fraud Status')
     plt.show()
+
+
+"""boxenplot "Distribution of step by Fraud Status" compares the distribution of step for non-fraudulent (0) and fraudulent (1) transactions.
+- Fraudulent transactions occur later overall: their median step is around 355, compared with 240 for legitimate transactions.
+- Fraud is spread across a wider time range: the middle 50% of fraudulent transactions spans approximately 175–550, versus 155–330 for legitimate transactions.
+- There is substantial overlap, so step alone would not clearly separate fraud from legitimate transactions."""
+
+""""Distribution of amount by Fraud Status" reveals that fraudulent transactions generally involve larger amounts, but the largest individual transactions are legitimate.
+- Legitimate transactions (0): most amounts are concentrated near zero on this scale, with a long right tail reaching roughly 55 million.
+- Fraudulent transactions (1): the central boxes sit higher and span a wider range, indicating generally larger and more variable amounts.
+  The upper tail reaches approximately 10 million.
+- Both distributions are strongly right-skewed: a small proportion of transactions have amounts much larger than typical ones.
+The legitimate extremes compress the plot, making the medians and overlap hard to assess."""
+
+"""Distribution of oldbalanceOrg by Fraud Status" shows that fraudulent transactions tend to come from accounts with higher starting balances (oldbalanceOrg).
+- Legitimate transactions (0): the central 50% is tightly concentrated near zero on this scale.
+- Fraudulent transactions (1): the central 50% spans a visibly wider and higher balance range.
+- Both distributions have long right tails, with extreme balances reaching roughly 37 million in both groups.
+A very high starting balance therefore does not uniquely indicate fraud."""
+
+"""Distribution of newbalanceOrig by Fraud Status" shows that fraudulent transactions have their resulting sender balance (newbalanceOrig) much more concentrated near zero.
+- Fraud (1): most boxes collapse near zero, with a small upper tail and extreme values reaching about 27 million.
+- Legitimate (0): typical balances are also low on this scale, but the upper quantiles extend much higher, with extremes around 37 million."""
