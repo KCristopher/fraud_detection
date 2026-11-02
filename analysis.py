@@ -23,20 +23,20 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_
 trainset = pd.concat([X_train, y_train], axis=1)
 testset = pd.concat([X_test, y_test], axis=1)
 # print('\n', 'There are {} million rows in the training data.'.format(round(X_train.shape[0]/1000000, 2)), '\n')
-normalized_counts_train = trainset['isFraud'].value_counts(dropna=False, normalize=True)
+# normalized_counts_train = trainset['isFraud'].value_counts(dropna=False, normalize=True)
 # a little more than 1 in a 1000 transactions in the training data are fraudulent
 # print('\n', 'The normalized distribution of the target variable in the training data is: \n', '\n', normalized_counts_train, '\n')
-normalized_counts_test = testset['isFraud'].value_counts(dropna=False, normalize=True)
+# normalized_counts_test = testset['isFraud'].value_counts(dropna=False, normalize=True)
 # print('\n', 'The normalized distribution of the target variable in the testing data is: \n', '\n', normalized_counts_test, '\n')
-eda_sample = (
-    trainset
-    .groupby("isFraud", group_keys=False)
-    .sample(frac=0.10, random_state=123)
-)
+# eda_sample = (
+#     trainset
+#     .groupby("isFraud", group_keys=False)
+#     .sample(frac=0.10, random_state=123)
+# )
 # print('\n', trainset.head(), '\n')
 # print('\n', trainset['isFraud'].value_counts(dropna = False), '\n')
-print('\n', eda_sample.head(), '\n')
-print('\n', eda_sample['isFraud'].value_counts(dropna = False), '\n')
+# print('\n', eda_sample.head(), '\n')
+# print('\n', eda_sample['isFraud'].value_counts(dropna = False), '\n')
 # eda_sample_cat = eda_sample.select_dtypes(include=['object'])
 # eda_sample_cat = pd.concat([eda_sample_cat, eda_sample['isFraud']], axis=1)
 # print('\n', "The number of unique values in each categorical column is: \n", '\n', eda_sample_cat.drop(columns=['isFraud']).nunique(), '\n')
@@ -59,12 +59,12 @@ print('\n', eda_sample['isFraud'].value_counts(dropna = False), '\n')
 # plt.title('Distribution of Transaction Types')
 # plt.ylabel('')
 # plt.show()
-eda_sample_num = eda_sample.select_dtypes(include=['int64', 'float64'])
-print('\n', eda_sample_num.head(), '\n')
+# eda_sample_num = eda_sample.select_dtypes(include=['int64', 'float64'])
+# print('\n', eda_sample_num.head(), '\n')
 
 # print('\n', eda_sample_num.groupby('isFlaggedFraud')['isFraud'].value_counts(), '\n')
 # print('\n', eda_sample_num.groupby('isFlaggedFraud')['isFraud'].value_counts(normalize=True), '\n')
-# isFlaggedFraud is almost always the same as isFraud, so it is not a useful feature for the model, because it's basically a duplicate of the target variable
+# # isFlaggedFraud is almost always the same as isFraud, so it is not a useful feature for the model, because it's basically a duplicate of the target variable
 # sns.kdeplot(data=eda_sample_num, x='amount', hue='isFraud', common_norm=False)
 # plt.title('Distribution of Transaction Amounts by Fraud Status')
 # plt.xlabel('Transaction Amount')
@@ -87,10 +87,10 @@ print('\n', eda_sample_num.head(), '\n')
 # print('\n', eda_sample_plotting['isFraud'].value_counts(normalize=False), '\n')
 
 
-for c in ['step','amount', 'oldbalanceOrg', 'newbalanceOrig', 'oldbalanceDest', 'newbalanceDest']:
-    sns.boxenplot(data=eda_sample, x='isFraud', y=c)
-    plt.title(f'Distribution of {c} by Fraud Status')
-    plt.show()
+# for c in ['step','amount', 'oldbalanceOrg', 'newbalanceOrig', 'oldbalanceDest', 'newbalanceDest']:
+#     sns.boxenplot(data=eda_sample, x='isFraud', y=c)
+#     plt.title(f'Distribution of {c} by Fraud Status')
+#     plt.show()
 
 
 """boxenplot "Distribution of step by Fraud Status" compares the distribution of step for non-fraudulent (0) and fraudulent (1) transactions.
@@ -124,3 +124,11 @@ A very high starting balance therefore does not uniquely indicate fraud."""
 - Legitimate (0): extreme balances reach approximately 320 million.
 - Fraud (1): extremes reach approximately 30 million.
 - Both groups’ central boxes are compressed near zero, making typical balances and their differences difficult to assess."""
+
+# Transactions identified as fraudulent are annulled. 
+# Hence, for fraud detection analysis, the following columns should not be utilized: oldbalanceOrg, newbalanceOrig, oldbalanceDest, newbalanceDest.
+trainset_selected = trainset.drop(columns=['isFlaggedFraud', 'nameOrig', 'nameDest', 'oldbalanceDest', 'newbalanceDest'])
+testset_selected = testset.drop(columns=['isFlaggedFraud', 'nameOrig', 'nameDest', 'oldbalanceDest', 'newbalanceDest'])
+
+X_train_sel, y_train = trainset_selected.drop(columns=['isFraud']), trainset_selected['isFraud']
+X_test_sel, y_test = testset_selected.drop(columns=['isFraud']), testset_selected['isFraud']
