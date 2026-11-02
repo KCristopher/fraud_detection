@@ -114,3 +114,13 @@ A very high starting balance therefore does not uniquely indicate fraud."""
 """Distribution of newbalanceOrig by Fraud Status" shows that fraudulent transactions have their resulting sender balance (newbalanceOrig) much more concentrated near zero.
 - Fraud (1): most boxes collapse near zero, with a small upper tail and extreme values reaching about 27 million.
 - Legitimate (0): typical balances are also low on this scale, but the upper quantiles extend much higher, with extremes around 37 million."""
+
+"""Distribution of oldbalanceDest by Fraud Status" shows that fraudulent transactions have a less extended upper tail in the recipient’s initial balance (oldbalanceDest).
+- Both classes are concentrated near zero on this scale, so their medians and central ranges are difficult to compare.
+- Legitimate transactions (0) have a much longer upper tail, reaching approximately 300 million.
+- Fraudulent transactions (1) reach approximately 30 million, with upper boxes also closer to zero."""
+
+"""Distribution of newbalanceDest by Fraud Status" reveals that the recipient’s final balance (newbalanceDest) has a much longer upper tail for legitimate transactions.
+- Legitimate (0): extreme balances reach approximately 320 million.
+- Fraud (1): extremes reach approximately 30 million.
+- Both groups’ central boxes are compressed near zero, making typical balances and their differences difficult to assess."""
