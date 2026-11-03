@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.model_selection import train_test_split
 from utils import get_sample_vals_from_each_col
+from sklearn.preprocessing import OneHotEncoder
 
 
 df = pd.read_csv('./data/Synthetic_Financial_datasets_log.csv')
@@ -127,8 +128,24 @@ A very high starting balance therefore does not uniquely indicate fraud."""
 
 # Transactions identified as fraudulent are annulled. 
 # Hence, for fraud detection analysis, the following columns should not be utilized: oldbalanceOrg, newbalanceOrig, oldbalanceDest, newbalanceDest.
-trainset_selected = trainset.drop(columns=['isFlaggedFraud', 'nameOrig', 'nameDest', 'oldbalanceDest', 'newbalanceDest'])
-testset_selected = testset.drop(columns=['isFlaggedFraud', 'nameOrig', 'nameDest', 'oldbalanceDest', 'newbalanceDest'])
+trainset_selected = trainset.drop(columns=['isFlaggedFraud', 'nameOrig', 'nameDest', 'oldbalanceDest', 'newbalanceDest', 'oldbalanceOrg', 'newbalanceOrig'])
+testset_selected = testset.drop(columns=['isFlaggedFraud', 'nameOrig', 'nameDest', 'oldbalanceDest', 'newbalanceDest', 'oldbalanceOrg', 'newbalanceOrig'])
 
 X_train_sel, y_train = trainset_selected.drop(columns=['isFraud']), trainset_selected['isFraud']
 X_test_sel, y_test = testset_selected.drop(columns=['isFraud']), testset_selected['isFraud']
+
+print('\n', f"There are {X_train_sel.shape[0] / 10 ** 6:.3f} million rows and {X_train_sel.shape[1]} columns in selected training data.", '\n')
+print('\n', f"There are {X_test_sel.shape[0] / 10 ** 6:.3f} million rows and {X_test_sel.shape[1]} columns in selected test data.", '\n')
+print('\n', trainset_selected.head(), '\n')
+
+# since fraud happens only in CASH_OUT and TRANSFER transactions, we can group the other types of transactions into a single category called OTHER
+X_train_sel['type'] = X_train_sel['type'].map({'CASH_OUT': 'CASH_OUT', 'PAYMENT': 'OTHER', 'CASH_IN': 'OTHER', 'TRANSFER': 'TRANSFER', 'DEBIT': 'OTHER'})
+X_test_sel['type'] = X_test_sel['type'].map({'CASH_OUT': 'CASH_OUT', 'PAYMENT': 'OTHER', 'CASH_IN': 'OTHER', 'TRANSFER': 'TRANSFER', 'DEBIT': 'OTHER'})
+
+ohe = OneHotEncoder(sparse_output=False, handle_unknown='ignore')
+categoricals = ohe.fit_transform(X_train_sel[['type']])
+categoricals_test = ohe.transform(X_test_sel[['type']])
+X_train_sel_enc = pd.concat([X_train_sel.drop(columns=['type']).reset_index(drop=True), pd.DataFrame(categoricals, columns=ohe.get_feature_names_out(['type']))], axis=1)
+X_test_sel_enc = pd.concat([X_test_sel.drop(columns=['type']).reset_index(drop=True), pd.DataFrame(categoricals_test, columns=ohe.get_feature_names_out(['type']))], axis=1)
+
+print('\n', X_train_sel_enc.head(), '\n')
