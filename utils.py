@@ -3,6 +3,7 @@
 import numpy as np 
 import pandas as pd
 from sklearn.metrics import classification_report, roc_auc_score, accuracy_score, average_precision_score
+from sklearn.model_selection import RandomizedSearchCV
 
 def sample_uniq_vals_from_series(
     num_uniq_values: int,
@@ -236,3 +237,70 @@ def get_model_predictions_plus_stats(X_train, y_train, X_test, y_test, final_mod
 
 
     return y_pred_binary
+
+
+
+def perform_randomized_grid_search(X_train, y_train, algorithm, param_distributions, n_iter=100, cv=5, scoring='accuracy',\
+                                   random_state=42, debug=False):
+    """
+    Perform a randomized grid search to find the best hyperparameters for a given algorithm.
+
+    Parameters:
+    algorithm (estimator): The machine learning algorithm to optimize.
+    param_distributions (dict): The parameter distributions to sample from during the search.
+    n_iter (int): Number of parameter settings that are sampled. Defaults to 100.
+    cv (int): Number of cross-validation folds. Defaults to 5.
+    scoring (str): The metric to optimize. Defaults to 'accuracy'.
+    random_state (int): Random seed for reproducibility. Defaults to 42.
+
+    Returns:
+    best_estimator (estimator): The best estimator found by the search.
+    best_score (float): The best score achieved by the best estimator.
+    best_params (dict): The best hyperparameters found by the search.
+
+    Example:
+    param_distributions = {
+     'n_estimators': [100, 200, 300, 400, 500],
+     'max_features': ['auto', 'sqrt', 'log2'],
+     'max_depth': [None, 10, 20, 30, 40, 50],
+     'min_samples_split': [2, 5, 10],
+     'min_samples_leaf': [1, 2, 4]
+        }
+    
+    best_estimator, best_score, best_params = perform_randomized_grid_search(X_train, y_train, RandomForestClassifier(), param_distributions)
+    
+    print("Best Estimator:", best_estimator)
+    print("Best Score:", best_score)
+    print("Best Parameters:", best_params)
+
+    Best Estimator: RandomForestClassifier(max_depth=40, max_features='log2', n_estimators=200)
+    Best Score: 0.9926412487912696
+    Best Parameters: {'n_estimators': 200, 'min_samples_split': 2, 'min_samples_leaf': 1, 'max_features': 'log2', 'max_depth': 40}
+    """
+    # Initialize the RandomizedSearchCV object
+    randomized_search = RandomizedSearchCV(
+        estimator=algorithm,
+        param_distributions=param_distributions,
+        n_iter=n_iter,
+        cv=cv,
+        scoring=scoring,
+        random_state=random_state,
+        n_jobs=-1,
+        verbose=2
+
+    )
+
+    # Fit the randomized search to the data
+    randomized_search.fit(X_train, y_train)
+
+    # Get the best estimator, score, and parameters
+    best_estimator = randomized_search.best_estimator_
+    best_score = randomized_search.best_score_
+    best_params = randomized_search.best_params_
+
+    if debug :
+        debug_results = pd.DataFrame(randomized_search.cv_results_)
+
+        return debug_results
+
+    return best_estimator, best_score, best_params
