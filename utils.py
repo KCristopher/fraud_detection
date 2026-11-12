@@ -155,48 +155,57 @@ def make_classification_report_given_treshold(y_test, predicted_probabs, treshol
 
 
 
-def get_model_predictions_plus_stats(X_train, y_train, X_test, y_test, final_model) :
-
+def get_model_predictions_plus_stats(X_train, y_train, X_test, y_test, final_model, ret_probs = False) :
     """
-    Generates predictions and evaluation metrics for a probabilistic binary classification model.
+    Generate probabilities and print evaluation metrics for a binary classifier.
 
-    This function assumes that the model returns class probabilities. It converts those probabilities
-    to binary class predictions using a custom thresholding function. It computes and prints AUC and
-    accuracy for both training and test sets, and displays a classification report on the test set
-    using a fixed threshold of 0.5.
+    Print ROC AUC and accuracy for the training and test sets, plus a test
+    classification report at a threshold of 0.5 and test average precision.
 
     Parameters
     ----------
     X_train : pandas.DataFrame
         Feature matrix for the training set.
     y_train : pandas.Series
-        True binary labels for the training set.
+        True binary training labels, encoded as 0 and 1.
     X_test : pandas.DataFrame
         Feature matrix for the test set.
     y_test : pandas.Series
-        True binary labels for the test set.
+        True binary test labels, encoded as 0 and 1.
     final_model : estimator object
-        A trained binary classifier with a `.predict()` method that returns class probabilities.
+        A fitted binary classifier. If predict_proba is available, its second
+        column is used and assumed to correspond to class 1. Otherwise, predict
+        must return positive-class probabilities, as with a native LightGBM
+        Booster using a binary classification objective.
+    ret_probs : bool, default=False
+        If True, return positive-class probabilities. Otherwise, return
+        binary predictions using a threshold of 0.5.
 
     Returns
     -------
-    y_pred : pd.Series.
-        Predicted class labels for the test set.
+    predictions : numpy.ndarray or pandas.Series
+        Positive-class probabilities when ret_probs=True; otherwise,
+        binary predictions for the test set.
 
     Notes
     -----
-    - This function assumes the model outputs probabilities, not class labels.
-    - The threshold for converting probabilities to binary predictions is fixed at 0.5.
-    - Requires the helper functions:
-        - `convert_probab_preds_to_binary_preds(preds)`
-        - `make_classification_report_given_treshold(y_true, y_prob, threshold)`
+    ROC AUC and average precision are calculated from probabilities.
+    Accuracy and the classification report use binary predictions obtained
+    with a threshold of 0.5.
+
+    Requires the helper functions:
+    - convert_probab_preds_to_binary_preds
+    - make_classification_report_given_treshold
 
     Examples
     --------
-    >>> y_pred = get_model_predictions_plus_stats(X_train, y_train, X_test, y_test, model)
+    >>> y_probs = get_model_predictions_plus_stats(
+    ...     X_train, y_train, X_test, y_test, model, ret_probs=True
+    ... )
     Train AUC is 0.947 and Test AUC is 0.912
     Train accuracy is 0.873 and Test accuracy is 0.846
     <classification report printed here>
+    Average test precision score is 0.735
     """
 
     def run_predictions(X, model):
@@ -217,7 +226,11 @@ def get_model_predictions_plus_stats(X_train, y_train, X_test, y_test, final_mod
     print(f"Train accuracy is {train_acc:0.3f} and Test accuracy is {test_acc:0.3f}", '\n')
     make_classification_report_given_treshold(y_test, y_pred, 0.5)
     print()
+    # y_pred are the predicted probabilities for the positive class (1)
     print(f"Average test precision score is {average_precision_score(y_test, y_pred):0.3f}", '\n')
 
+    if ret_probs:
+        return y_pred
 
-    return y_pred
+
+    return y_pred_binary
