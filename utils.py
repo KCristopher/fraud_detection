@@ -227,7 +227,9 @@ def get_model_predictions_plus_stats(X_train, y_train, X_test, y_test, final_mod
     make_classification_report_given_treshold(y_test, y_pred, 0.5)
     print()
     # y_pred are the predicted probabilities for the positive class (1)
+    print(f'Average train precision score is {average_precision_score(y_train, in_sample_pred):0.3f}')
     print(f"Average test precision score is {average_precision_score(y_test, y_pred):0.3f}", '\n')
+    
 
     if ret_probs:
         return y_pred
