@@ -2,6 +2,7 @@
 
 import numpy as np 
 import pandas as pd
+from sklearn.metrics import classification_report, roc_auc_score, accuracy_score, average_precision_score
 
 def sample_uniq_vals_from_series(
     num_uniq_values: int,
@@ -117,3 +118,106 @@ def get_nans_overview(frame, missing_only=True, decimals=3,ascending=False):
         nan_frame = nan_frame[nan_frame["Fraction of NaNs"] > 0]
 
     return nan_frame.round(decimals)
+
+def convert_probab_preds_to_binary_preds(predicted_probabs, treshold = 0.5, name = 'Downtime') :
+    """
+    Convert predicted probabilities to binary predictions using a given threshold.
+
+    Example
+    --------
+    y_pred[ : 5]
+
+        array([0.00373895, 0.99699745, 0.99717775, 0.00335553, 0.00335707])
+
+    convert_probab_preds_to_binary_preds(y_pred).head()
+
+        0    0
+        1    1
+        2    1
+        3    0
+        4    0
+        Name: Downtime, dtype: int64
+    """
+    return pd.Series( [ 1 if p > treshold else 0 for p in predicted_probabs ], name = name )
+
+
+
+
+def make_classification_report_given_treshold(y_test, predicted_probabs, treshold = 0.5, name = 'Downtime') :
+
+    binary_probabs = convert_probab_preds_to_binary_preds(predicted_probabs, treshold, name)
+    report = classification_report(y_test, binary_probabs)
+
+    treshold_probab = treshold * 100
+
+    print(f'Model performance when treshold probability is {treshold_probab:0.1f} %', '\n' )
+    print(report)
+
+
+
+def get_model_predictions_plus_stats(X_train, y_train, X_test, y_test, final_model) :
+
+    """
+    Generates predictions and evaluation metrics for a probabilistic binary classification model.
+
+    This function assumes that the model returns class probabilities. It converts those probabilities
+    to binary class predictions using a custom thresholding function. It computes and prints AUC and
+    accuracy for both training and test sets, and displays a classification report on the test set
+    using a fixed threshold of 0.5.
+
+    Parameters
+    ----------
+    X_train : pandas.DataFrame
+        Feature matrix for the training set.
+    y_train : pandas.Series
+        True binary labels for the training set.
+    X_test : pandas.DataFrame
+        Feature matrix for the test set.
+    y_test : pandas.Series
+        True binary labels for the test set.
+    final_model : estimator object
+        A trained binary classifier with a `.predict()` method that returns class probabilities.
+
+    Returns
+    -------
+    y_pred : pd.Series.
+        Predicted class labels for the test set.
+
+    Notes
+    -----
+    - This function assumes the model outputs probabilities, not class labels.
+    - The threshold for converting probabilities to binary predictions is fixed at 0.5.
+    - Requires the helper functions:
+        - `convert_probab_preds_to_binary_preds(preds)`
+        - `make_classification_report_given_treshold(y_true, y_prob, threshold)`
+
+    Examples
+    --------
+    >>> y_pred = get_model_predictions_plus_stats(X_train, y_train, X_test, y_test, model)
+    Train AUC is 0.947 and Test AUC is 0.912
+    Train accuracy is 0.873 and Test accuracy is 0.846
+    <classification report printed here>
+    """
+
+    def run_predictions(X, model):
+        if hasattr(model, "predict_proba"):
+            return model.predict_proba(X)[:, 1]
+        return model.predict(X)
+
+    
+    y_pred = run_predictions(X_test, final_model)
+    y_pred_binary = convert_probab_preds_to_binary_preds(y_pred)
+    in_sample_pred = run_predictions(X_train, final_model)
+    in_sample_pred_binary = convert_probab_preds_to_binary_preds(in_sample_pred)
+    train_auc = roc_auc_score(y_train, in_sample_pred)
+    test_auc = roc_auc_score(y_test, y_pred)
+    print(f"Train AUC is {train_auc:0.3f} and Test AUC is {test_auc:0.3f}", '\n')
+    train_acc = accuracy_score(y_train, in_sample_pred_binary)
+    test_acc = accuracy_score(y_test, y_pred_binary)
+    print(f"Train accuracy is {train_acc:0.3f} and Test accuracy is {test_acc:0.3f}", '\n')
+    make_classification_report_given_treshold(y_test, y_pred, 0.5)
+    print()
+    print(f"Average test precision score is {average_precision_score(y_test, y_pred):0.3f}", '\n')
+
+
+    return y_pred
