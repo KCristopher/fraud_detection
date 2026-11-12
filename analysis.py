@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.model_selection import train_test_split
-from utils import get_sample_vals_from_each_col, get_model_predictions_plus_stats
+from utils import get_sample_vals_from_each_col, get_model_predictions_plus_stats, perform_randomized_grid_search
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.tree import DecisionTreeClassifier
 
@@ -149,8 +149,22 @@ categoricals_test = ohe.transform(X_test_sel[['type']])
 X_train_sel_enc = pd.concat([X_train_sel.drop(columns=['type']).reset_index(drop=True), pd.DataFrame(categoricals, columns=ohe.get_feature_names_out(['type']))], axis=1)
 X_test_sel_enc = pd.concat([X_test_sel.drop(columns=['type']).reset_index(drop=True), pd.DataFrame(categoricals_test, columns=ohe.get_feature_names_out(['type']))], axis=1)
 
-print('\n', X_train_sel_enc.head(), '\n')
+# print('\n', X_train_sel_enc.head(), '\n')
 
-tree = DecisionTreeClassifier(random_state=42, min_samples_leaf=250, max_leaf_nodes=60, max_depth=5)
-tree.fit(X_train_sel_enc, y_train)
-tree_preds = get_model_predictions_plus_stats(X_train_sel_enc, y_train, X_test_sel_enc, y_test, tree)
+# tree = DecisionTreeClassifier(random_state=42, min_samples_leaf=250, max_leaf_nodes=60, max_depth=5)
+# tree.fit(X_train_sel_enc, y_train)
+# tree_preds = get_model_predictions_plus_stats(X_train_sel_enc, y_train, X_test_sel_enc, y_test, tree)
+
+param_distributions = {
+     'max_features': ['sqrt', 'log2'],
+     'max_depth': [d for d in range(5, 13)],
+     'min_samples_split': [ int(2.5 * l) for l in range(50, 301, 50)] + [ int(3 * l) for l in range(50, 301, 50)],
+     'min_samples_leaf': [ l for l in range(50, 301, 50)],
+        }
+    
+best_estimator, best_score, best_params = perform_randomized_grid_search(X_train_sel_enc, y_train, DecisionTreeClassifier(),\
+                                                                         param_distributions, scoring='average_precision', n_iter=10, cv=5, random_state=42)
+    
+print("Best Estimator:", best_estimator)
+print("Best Score:", best_score)
+print("Best Parameters:", best_params)
